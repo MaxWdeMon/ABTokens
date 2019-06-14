@@ -3,6 +3,7 @@
 
 * Diagram can be generated from here: 
 [http://www.plantuml.com/plantuml/uml/]
+```
 @startuml
 buyTokens --> nonReentrant
 buyTokens -> weiAmount
@@ -16,3 +17,4 @@ emitTokensPurchased->_updatePurchasingState
 _updatePurchasingState->_forwardFunds
 _forwardFunds->_postValidatePurchase
 @enduml
+```
