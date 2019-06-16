@@ -6,64 +6,79 @@ import "./Waterfall.sol";
 
 contract Deal{
     DateCalc public dates = new DateCalc();
+
     uint256 public startDate;
     uint256 public lastChecked;
-    Note[] public notes;
     uint256 public poolBalance;
-    uint256[] public balance;
-    uint256[] public interestRate;
+        
+    uint8 numberOfNotes = 0;
+    Note[] private notes;
+    uint256[] public balances;
+    uint256[] public interestRates;
     uint256[] public interestDue;
     uint256[] public currentPayment;
-    
+    enum DealStage{Setup, PreLaunch, Launch, Start, Mature, Cleanup}
+    DealStage dealStage = DealStage.Setup;
   
     
-    constructor(uint256[] memory balances, uint256[] memory rates) public{
-        require(balances.length == rates.length);
-        balance = balances;
-        interestRate = rates;
-        
-        interestDue = new uint256[](rates.length);
-        currentPayment = new uint256[](rates.length);
-    }
-    
-    function addNote(address[] memory beneficiaries, uint256[] memory shares) public {
-        require(balance.length>notes.length);
-        notes.push(new Note());
-    }
-    
-    function updateInterestsDue() public{
-        updateInterestsDue(now);
+    function addNote(uint8 newNoteLevel, uint256 balance, uint256 interestRate, Note n) public {
+        require(dealStage == DealStage.Setup, "Notes can only be added during the deal setup stage. No later changes to the payments waterfall are possile.");
+        require(numberOfNotes == newNoteLevel);
+        notes.push(n);
+        balances.push(balance);
+        interestRates.push(interestRate);
+        interestDue.push(0);
+        currentPayment.push(0);
+        numberOfNotes++;
     }
     
     function getNotes() public view returns(Note[] memory){
         return notes;
     }
     
+    function setStartDate(uint256 _startDate) public{
+        require(startDate == 0, "StartDate has already been set");
+        require(dealStage == DealStage.Setup, "StartDate can only be set while the Deal is in Setup dealStage. ");
+        startDate = _startDate;
+        lastChecked = _startDate;
+    }
+    
+    function updateInterestDue(int32 monthsAccrued, uint256 i) private {
+        interestDue[i] += Waterfall.calculateInterest(monthsAccrued, balances[i], interestRates[i]);
+    }
+    
     function updateInterestsDue(uint256 date) public {
+        require(date > lastChecked, "Interest can only be updated to a date after the current lastChecked date.");
         int32 monthsAccrued;
         (monthsAccrued, lastChecked) = dates.monthsSince(lastChecked, date);
         if(monthsAccrued > 0 ){
-            for(uint256 i=0;i< balance.length;i++){
+            for(uint256 i = 0; i< balances.length;i++){
                 updateInterestDue(monthsAccrued, i);
             }
         }
     }
     
-    function updateInterestDue(int32 monthsAccrued, uint256 i) private {
-            interestDue[i] += Waterfall.calculateInterest(monthsAccrued, balance[i], interestRate[i]);
+    function updateInterestsDue() public{
+        updateInterestsDue(now);
+    }
+    
+    function checkPaymentUpdater() public {
+          // use 'Assert' to test the contract
+          for(uint8 i = 1; i < 6; i++){
+              updateInterestsDue( 2700000 * i );
+          }
     }
     
     function() external payable{
-        
     }
     
     function payWaterfall(uint256 principal, uint256 totalReceipts, uint256 AUDxETH) public payable{
-        require(totalReceipts <= address(this).balance);
+        require(( totalReceipts * AUDxETH ) <= address(this).balance);
         require(notes.length > 0 );
         uint256[] memory totalPayments; 
         uint256[] memory principalPayments;
         updateInterestsDue();
-        (totalPayments, principalPayments) = Waterfall.calculateWaterfall(principal, totalReceipts, balance, interestDue);
+        (totalPayments, principalPayments) = Waterfall.calculateWaterfall(principal, totalReceipts, balances, interestDue);
         for(uint8 i = 0 ; i < notes.length; i++){
             notes[i].pay.value(totalPayments[i] / AUDxETH).gas(70000)();
         }
@@ -72,7 +87,7 @@ contract Deal{
     
     
     function getBalances() public view returns(uint256[] memory){
-        return balance;
+        return balances;
     }
   
 }
