@@ -4,7 +4,7 @@ import "https://github.com/OpenZeppelin/openzeppelin-solidity/contracts/payment/
 import "https://github.com/OpenZeppelin/openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
 /**
- * based on PaymentSplitter and ERC20 
+ * based on PaymentSplitter and ERC20
  */
 contract Note is  IERC20{
     using SafeMath for uint256;
@@ -18,7 +18,7 @@ contract Note is  IERC20{
     uint256 private _totalReleased;
     uint256 public totalDistributions;
 
-    mapping (address => uint256) private _balances;
+    mapping(address => uint256) private _balances;
     mapping(address => uint256) private _released;
     
     address[] private _payees;

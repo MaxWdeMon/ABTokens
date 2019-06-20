@@ -5,11 +5,11 @@ pragma solidity >=0.4.0 <0.6.0;
  * @title Waterfall paying engine for securitisation on Ethereum 
  * 
  */
- 
+
 library Waterfall {
     /**
      * @param balance to be used as a basis for interest calculation. In case of a loan it is usually the outstanding amount at the beginning of the month.
-     * @param monthlyRateBPS is the interest to be paid each month in basis points. e.g. monthlyRateBPS = 100 corresponds to 1% per month, which is just over 12.68% per year (1 + 100bps / 10000) ^ 12 - 1  
+     * @param monthlyRateBPS is the interest to be paid each month in basis points. e.g. monthlyRateBPS = 100 corresponds to 1% per month, which is just over 12.68% per year (1 + 100bps / 10000) ^ 12 - 1
      * @return the amount due to be paid
      */
     function caluculateMonthlyInterestDue(uint256 balance, uint256 monthlyRateBPS) public pure returns(uint256){
@@ -44,19 +44,18 @@ library Waterfall {
         return interestDue;
     }
     
-     function calculateWaterfall(uint256 principal, uint256 totalReceipts, uint256[] memory balance, uint256[] memory interestDue) public pure returns (uint256[] memory, uint256[] memory){
+     function calculateWaterfall(uint256 principal, uint256 totalReceipts, uint256[] memory balance, uint256[] memory interestDue)
+     public pure returns (uint256[] memory, uint256[] memory){
         uint256[] memory principalPayment = new uint256[](balance.length);
         uint256[] memory totalPayment = new uint256[](balance.length);
         totalReceipts += balance[balance.length-1]; //take the most junior tranche as the reserve;
-        //balance[balance.length-1] = 0; 
-        for(uint8 i=0;i < balance.length-1;i++){
+        for(uint8 i = 0; i < balance.length-1; i++){
             uint256 trancheInterestDue = interestDue[i];
-            
             if(trancheInterestDue > totalReceipts){
                 //emit missedInterestPayment(trancheInterestDue - totalReceipts);
                 totalPayment[i] = totalReceipts;
                 totalReceipts = 0;
-                return (totalPayment, principalPayment); //waterfall; //, _tranches);
+                return (totalPayment, principalPayment);
             }
             else
             {
@@ -79,13 +78,11 @@ library Waterfall {
                     }
                     else
                     {
-                        principalPayment[i] =  principal;
+                        principalPayment[i] = principal;
                         payment += principal;
                         totalReceipts = totalReceipts - principal;
                         principal = 0;
                     }
-                    
-                    
                 }
                 totalPayment[i] = payment;
             }
