@@ -1,6 +1,6 @@
 pragma solidity >=0.4.0 <0.6.0;
-import "./Waterfall.sol";
-import "./DateCalc.sol";
+import "../Waterfall.sol";
+import "../DateCalc.sol";
 
 contract Waterfalllib_tester{
     function caluculateMonthlyInterestDue(uint256 balance, uint256 monthlyRateBPS) public pure returns(uint256){

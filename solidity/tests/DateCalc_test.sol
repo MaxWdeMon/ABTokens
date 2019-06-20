@@ -1,6 +1,6 @@
 pragma solidity >=0.4.0 <0.6.0;
 import "remix_tests.sol"; // this import is automatically injected by Remix.
-import "./DateCalc.sol";
+import "../DateCalc.sol";
 // file name has to end with '_test.sol'
 
 contract test_1 {
