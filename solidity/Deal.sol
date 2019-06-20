@@ -1,8 +1,8 @@
 pragma solidity ^0.5.0;
 
-import "./Note.sol";
-import "./DateCalc.sol";
-import "./Waterfall.sol";
+import "https://github.com/MaxWdeMon/ABTokens/solidity/Note.sol";
+import "https://github.com/MaxWdeMon/ABTokens/solidity/DateCalc.sol";
+import "https://github.com/MaxWdeMon/ABTokens/solidity/Waterfall.sol";
 
 contract Deal{
     DateCalc public dates = new DateCalc();
