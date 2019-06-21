@@ -24,7 +24,6 @@ pragma solidity >=0.4.0 <0.6.0;
         //   d.setStartDate(1);
         //   Assert.equal(uint(2), uint(2), "error message");
         }
-        }
 
         function checkStartDateSetterFail() public returns (bool) {
           // use the return value (true or false) to test the contract
