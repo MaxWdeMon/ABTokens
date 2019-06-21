@@ -3,24 +3,26 @@ pragma solidity ^0.5.0;
 import "./Note.sol";
 import "./DateCalc.sol";
 import "./Waterfall.sol";
-
-contract Deal{
+import "https://github.com/OpenZeppelin/openzeppelin-solidity/contracts/ownership/Ownable.sol";  
+contract Deal is Ownable{
     DateCalc public dates = new DateCalc();
-
-    uint256 public startDate;
-    uint256 public lastChecked;
-    uint256 public poolBalance;
+    address private auditor = 0x0;
+    bool private isAudited = false;
+    uint256 private startDate;
+    uint256 private maturityDate;
+    uint256 private lastChecked;
+    uint256 private poolBalance;
 
     uint8 numberOfNotes = 0;
     Note[] private notes;
-    uint256[] public balances;
-    uint256[] public interestRates;
-    uint256[] public interestDue;
-    uint256[] public currentPayment;
-    enum DealStage{Setup, PreLaunch, Launch, Active, Mature, Cleanup}
-    DealStage dealStage = DealStage.Setup;
+    uint256[] private balances;
+    uint256[] private interestRates;
+    uint256[] private interestDue;
+    uint256[] private currentPayment;
+    enum DealStage{Setup, Audit, Crowdsale, Active, Matured, Cleanup}
+    DealStage private dealStage = DealStage.Setup;
 
-    function addNote(uint8 newNoteLevel, uint256 balance, uint256 interestRate, Note n) public {
+    function addNote(uint8 newNoteLevel, uint256 balance, uint256 interestRate, Note n) public onlyOwner {
         require(dealStage == DealStage.Setup,
         "Notes can only be added during the deal setup stage. No later changes to the payments waterfall are possile.");
         require(numberOfNotes == newNoteLevel,
@@ -90,4 +92,45 @@ contract Deal{
     function getBalances() public view returns(uint256[] memory){
         return balances;
     }
+
+    function setAuditor(address _auditor) public ownerOnly{
+        require(auditor == 0x0, "Auditor can only be set once");
+        auditor = _auditor;
+    }
+    function confirmAuditCompleted() public{
+        require(msg.sender == auditor, "Only the auditor can execute this functions");
+        isAudited = true;
+    }
+    function crowdSaleCompleted() public returns(bool){
+        ///TODO: Make sure the crowdsale for all notes has finished successfully
+        return true;
+    }
+    function nextDealStage() public ownerOnly{
+       if(dealStage == DealStage.Setup){
+           require(auditor == 0x0, "Auditor must be set");
+           require(numberOfNotes>0, "There must be at least one note setup in this deal before moving to the next stage");
+           dealStage = DealStage.Audit;
+       }else if(dealStage == DealStage.Audit){
+           require(isAudited, "The audit of the code must be completed, before moving to the next stage");
+           dealStage = DealStage.Crowdsale;
+       }else if(dealStage == DealStage.Crowdsale){
+           require(crowdSaleCompleted(), "Crowdsale for all notes has finished successfully, before moving to the next stage");
+           dealStage = DealStage.Active;
+        }else if(dealStage == DealStage.Active){
+           require(poolBalance <= uint256(1), "The pool must have repaid or defaulted in full, befure the deal can mature");
+           dealStage = DealStage.Matured;
+           maturityDate = now;
+       }else if(dealStage == DealStage.Matured){
+           require(now > maturityDate + 31536000, "At least one year must have passed after the maturityDate to move the deal to Cleanup Stage");
+           dealStage = DealStage.Cleanup;
+       }
+      }
+      function cleanup() public payable{
+          require(dealStage == DealStage.Cleanup, "The deal must be in cleanup stage to allow the selfdestruct function to be called");
+          ///Please make sure that any other payment arrangements or procedures invovling this contract have been decommissioned, before executing the final cleanup.
+          _owner.send(address(this).balance);
+          selfdestruct(_owner);
+      }
+    }
+
 }
