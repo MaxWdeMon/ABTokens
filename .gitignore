@@ -1,1 +1,7 @@
 solidity/tests/.DS_Store
+contracts/.DS_Store
+bckpTests/.DS_Store
+.DS_Store
+bckpTests/*
+build/*
+node_modules/*

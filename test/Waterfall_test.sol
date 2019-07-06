@@ -8,10 +8,9 @@ import "truffle/DeployedAddresses.sol";
 import "../contracts/Waterfall.sol";
 
 contract Waterfall_test {
-//   Waterfalllib_tester w;
+
   function beforeAll() public {
-    // w = new Waterfalllib_tester();
-    // Assert.equal(address(w), address(w), "error in before all function");
+
   }
 
   function testInterestDueCalculation() public {
