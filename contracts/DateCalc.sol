@@ -1,27 +1,20 @@
 pragma solidity >=0.5.0 <0.6.0;
-import "https://github.com/MaxWdeMon/ethereum-datetime/contracts/DateTime.sol";
+import "../node_modules/ethereum-datetime/contracts/DateTime.sol";
 //import "./DateTime.sol";
 //import "https://github.com/pipermerriam/ethereum-datetime/contracts/DateTime.sol";
-/**
- * Contract which implements utilities for working with datetime values in ethereum.
- *
- *  Contract Deployments:
- *  Mainnet: 0x1a6184CD4C5Bea62B0116de7962EE7315B7bcBce
- *  Rinkeby: 0x92482Ba45A4D2186DafB486b322C6d0B88410FE7
-*/
 
-contract DateCalc is DateTime {
+
+library DateCalc {
    // using DateTime for DateTime._DateTime;
 /**
  * @param date (a timestamp) that will be normalised
- * @param day a standardised day of the month (should be <= 28 to avoid errors)
+ * @param day a standardised day of the month (should be <= 28 to avoid errors with payments falling on February 29th in non-leap years.)
  * @return timestamp reset to midnight of a given day. e.g. 26 Feb 2017 11:45am becomes 1 Feb 2017 00:00.
  * When calculating interest payments this code will ensure that the month count is always normalised to one date.
- * 
  */
     function normaliseTimestamp(uint256 date, uint8 day) public pure returns(uint256){
         require(day <= 28 && day > 0, "The day is out of range. We can only normalise to dates between the 1st and the 28th.");
-        DateTime._DateTime memory d = parseTimestamp(date);
+        DateTime._DateTime memory d = DateTime.parseTimestamp(date);
         return DateTime.toTimestamp(d.year, d.month, day);
     }
     /**
@@ -31,8 +24,8 @@ contract DateCalc is DateTime {
      * e.g. 16 Jan to 15 March of the same year is a period of 2 months and the second return parameter will be 16 Feb;
      */
     function monthsSince(uint256 start, uint256 end) public pure returns(int32, uint256){
-       _DateTime memory d1 = parseTimestamp(start);
-       _DateTime memory d2 = parseTimestamp(end);
+       DateTime._DateTime memory d1 = DateTime.parseTimestamp(start);
+       DateTime._DateTime memory d2 = DateTime.parseTimestamp(end);
        uint8 daysDiff = d2.day < d1.day?1:0;
        int32 monthsDiff = int32(d2.month) - int32(d1.month);
        int32 yearsDiff = int32(d2.year) - int32(d1.year);
@@ -40,6 +33,4 @@ contract DateCalc is DateTime {
        uint16 newYear = newMonth<1? d2.year - 1:d2.year;
        return (monthsDiff + 12 * yearsDiff - daysDiff, DateTime.toTimestamp(newYear, newMonth, d1.day));
     }
-    
-
 }

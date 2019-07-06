@@ -1,9 +1,13 @@
-pragma solidity >=0.4.0 <0.6.0;
-import "remix_tests.sol"; // this import is automatically injected by Remix.
-import "../DateCalc.sol";
+pragma solidity >=0.4.25 <0.6.0;
 // file name has to end with '_test.sol'
+// import "remix_tests.sol"; // this import is automatically injected by Remix.
+// import "../DateCalc.sol";
+import "truffle/Assert.sol";
+import "truffle/DeployedAddresses.sol";
+import "../contracts/DateCalc.sol";
 
-contract test_1 {
+
+contract DateCalc_test {
   uint256 testStartDate = 1576386631;  // timestamp for 2019-12-15;
   uint256[] testEndDates = [
  1580535061  // timestamp for 2020-02-01
@@ -36,32 +40,37 @@ contract test_1 {
 ,1582869508  // timestamp for 2020-02-28
 ,1582955969  // timestamp for 2020-02-29
 ];
-DateCalc d;
+// DateCalc d;
   function beforeAll() public {
     // here should instantiate tested contract
     //Assert.equal(uint(4), uint(3), "error in before all function");
-    d = new DateCalc();
+    // d = new DateCalc(); //this is the remix version
+    // d = DateCalc(DeployedAddresses.DateCalc());
   }
 
   function testMonthsSinceFunction() public {
     // use 'Assert' to test the contract
     int32  months;
     uint256 newDate;
-    int32  months_check;
-    uint256 newDate_check;
-    for(uint8 i = 13; i< 15; i++){
-        (months, newDate) = d.monthsSince(testStartDate, testEndDates[i]);
-        (months_check, newDate_check) = i<14?(1,1579046400):(2,1581724800);
+    int32  months_expected;
+    uint256 newDate_expected;
+    for(uint8 i = 0; i < 28; i++){
+        (months, newDate) = DateCalc.monthsSince(testStartDate, testEndDates[i]);
+        (months_expected, newDate_expected) = i<14?(1,1579046400):(2,1581724800);
 
-         Assert.equal(months,months_check , "Months check failed");
-         Assert.equal(newDate,newDate_check , "New Date check failed");
+         Assert.equal(months,months_expected, "Months mismatch from expected value");
+         Assert.equal(newDate,newDate_expected, "New Date mismatch from expected value");
     }
-   
   }
 
-  function check2() public view returns (bool) {
-    // use the return value (true or false) to test the contract
-    return true;
+  function testNormalizeTimestamp() public {
+     uint256 date_expected;
+     uint256 date_calculated;
+     for(uint8 i = 0; i < 28; i++){
+        date_expected = 1581292800;
+        date_calculated = DateCalc.normaliseTimestamp(testEndDates[i], 10);
+         Assert.equal(date_calculated, date_expected, "NoremalisedDate mismatch from expected value");
+    }
   }
 }
 

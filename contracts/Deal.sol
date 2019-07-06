@@ -3,24 +3,25 @@ pragma solidity ^0.5.0;
 import "./Note.sol";
 import "./DateCalc.sol";
 import "./Waterfall.sol";
-import "https://github.com/OpenZeppelin/openzeppelin-solidity/contracts/ownership/Ownable.sol";  
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";  
+
 contract Deal is Ownable{
-    DateCalc public dates = new DateCalc();
-    address private auditor = 0x0;
-    bool private isAudited = false;
-    uint256 private startDate;
-    uint256 private maturityDate;
-    uint256 private lastChecked;
-    uint256 private poolBalance;
+    // DateCalc public datecalc = new DateCalc();
+    address internal auditor = address(0x0);
+    bool internal isAudited = false;
+    uint256 internal startDate;
+    uint256 internal maturityDate;
+    uint256 internal lastChecked;
+    uint256 internal poolBalance;
 
     uint8 numberOfNotes = 0;
-    Note[] private notes;
-    uint256[] private balances;
-    uint256[] private interestRates;
-    uint256[] private interestDue;
-    uint256[] private currentPayment;
+    Note[] internal notes;
+    uint256[] internal balances;
+    uint256[] internal interestRates;
+    uint256[] internal interestDue;
+    uint256[] internal currentPayment;
     enum DealStage{Setup, Audit, Crowdsale, Active, Matured, Cleanup}
-    DealStage private dealStage = DealStage.Setup;
+    DealStage internal dealStage = DealStage.Setup;
 
     function addNote(uint8 newNoteLevel, uint256 balance, uint256 interestRate, Note n) public onlyOwner {
         require(dealStage == DealStage.Setup,
@@ -53,7 +54,7 @@ contract Deal is Ownable{
     function updateInterestsDue(uint256 date) public {
         require(date > lastChecked, "Interest can only be updated to a date after the current lastChecked date.");
         int32 monthsAccrued;
-        (monthsAccrued, lastChecked) = dates.monthsSince(lastChecked, date);
+        (monthsAccrued, lastChecked) = DateCalc.monthsSince(lastChecked, date);
         if(monthsAccrued > 0 ){
             for(uint256 i = 0; i < balances.length; i++){
                 updateInterestDue(monthsAccrued, i);
@@ -93,21 +94,21 @@ contract Deal is Ownable{
         return balances;
     }
 
-    function setAuditor(address _auditor) public ownerOnly{
-        require(auditor == 0x0, "Auditor can only be set once");
+    function setAuditor(address _auditor) public onlyOwner{
+        require(dealStage == DealStage.Setup, "Auditor can only be set during the setup dealStage");
         auditor = _auditor;
     }
     function confirmAuditCompleted() public{
         require(msg.sender == auditor, "Only the auditor can execute this functions");
         isAudited = true;
     }
-    function crowdSaleCompleted() public returns(bool){
+    function crowdSaleCompleted() public pure returns(bool){
         ///TODO: Make sure the crowdsale for all notes has finished successfully
         return true;
     }
-    function nextDealStage() public ownerOnly{
+    function nextDealStage() public onlyOwner{
        if(dealStage == DealStage.Setup){
-           require(auditor == 0x0, "Auditor must be set");
+           require(auditor == address(0x0), "Auditor must be set");
            require(numberOfNotes>0, "There must be at least one note setup in this deal before moving to the next stage");
            dealStage = DealStage.Audit;
        }else if(dealStage == DealStage.Audit){
@@ -128,9 +129,20 @@ contract Deal is Ownable{
       function cleanup() public payable{
           require(dealStage == DealStage.Cleanup, "The deal must be in cleanup stage to allow the selfdestruct function to be called");
           ///Please make sure that any other payment arrangements or procedures invovling this contract have been decommissioned, before executing the final cleanup.
-          _owner.send(address(this).balance);
-          selfdestruct(_owner);
+          address payable o = address(uint160(address(owner())));
+          o.transfer(address(this).balance);
+          selfdestruct(o);
       }
+
+    function getStartDate() public returns(uint256) {
+        return startDate;
     }
 
+    function getLastChecked() public returns(uint256) {
+        return lastChecked;
+    }
+
+    function getInterestDue() public returns(uint256[] memory) {
+        return interestDue;
+    }
 }

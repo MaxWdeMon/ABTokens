@@ -1,9 +1,13 @@
 pragma solidity >=0.4.0 <0.6.0;
-import "remix_tests.sol"; // this import is automatically injected by Remix.
-import "../Waterfall.sol";
+// import "remix_tests.sol"; // this import is automatically injected by Remix.
+// import "../Waterfall.sol";
 // file name has to end with '_test.sol'
 
-contract test_1 {
+import "truffle/Assert.sol";
+import "truffle/DeployedAddresses.sol";
+import "../contracts/Waterfall.sol";
+
+contract Waterfall_test {
 //   Waterfalllib_tester w;
   function beforeAll() public {
     // w = new Waterfalllib_tester();
