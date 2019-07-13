@@ -5,7 +5,7 @@ import "../node_modules/ethereum-datetime/contracts/DateTime.sol";
 
 
 library DateCalc {
-   // using DateTime for DateTime._DateTime;
+   using DateTime for DateTime;
 /**
  * @param date (a timestamp) that will be normalised
  * @param day a standardised day of the month (should be <= 28 to avoid errors with payments falling on February 29th in non-leap years.)

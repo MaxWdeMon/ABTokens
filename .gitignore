@@ -5,3 +5,4 @@ bckpTests/.DS_Store
 bckpTests/*
 build/*
 node_modules/*
+docs/uml.txt

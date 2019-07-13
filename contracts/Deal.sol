@@ -3,9 +3,11 @@ pragma solidity ^0.5.0;
 import "./Note.sol";
 import "./DateCalc.sol";
 import "./Waterfall.sol";
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";  
+import "../node_modules/openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract Deal is Ownable{
+    using DateCalc for DateCalc;
+    using Waterfall for Waterfall;
     // DateCalc public datecalc = new DateCalc();
     address internal auditor = address(0x0);
     bool internal isAudited = false;
@@ -22,7 +24,7 @@ contract Deal is Ownable{
     uint256[] internal currentPayment;
     enum DealStage{Setup, Audit, Crowdsale, Active, Matured, Cleanup}
     DealStage internal dealStage = DealStage.Setup;
-
+    event NoteAdded(uint8 newNoteLevel, uint256 balance, uint256 interestRate, Note n);
     function addNote(uint8 newNoteLevel, uint256 balance, uint256 interestRate, Note n) public onlyOwner {
         require(dealStage == DealStage.Setup,
         "Notes can only be added during the deal setup stage. No later changes to the payments waterfall are possile.");
@@ -34,6 +36,7 @@ contract Deal is Ownable{
         interestDue.push(0);
         currentPayment.push(0);
         numberOfNotes++;
+        emit NoteAdded(newNoteLevel, balance, interestRate, xn);
     }
 
     function getNotes() public view returns(Note[] memory){
