@@ -141,7 +141,7 @@ contract Note is  IERC20{
      * @param subtractedValue The amount of tokens to decrease the allowance by.
      */
     function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) {
-        require(spender != address(0));
+        require(spender != address(0) );
 
         _allowed[msg.sender][spender] = _allowed[msg.sender][spender].sub(subtractedValue);
         emit Approval(msg.sender, spender, _allowed[msg.sender][spender]);
@@ -155,7 +155,7 @@ contract Note is  IERC20{
     * @param value The amount to be transferred.
     */
     function _transfer(address from, address to, uint256 value) internal {
-        require(to != address(0));
+        require(to != address(0), "The note can't be transferred to a 0 address. Please use burn");
 
         _balances[from] = _balances[from].sub(value);
         _balances[to] = _balances[to].add(value);

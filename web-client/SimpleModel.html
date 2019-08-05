@@ -1,0 +1,361 @@
+<html><head>
+        <!-- <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css"/> -->
+        <link rel="stylesheet" href="w3.css"/>
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous" />
+        <!-- <link rel="stylesheet" href="fontawesome-free-5.7.2-web/css/all.min.css" /> -->
+        <link rel="stylesheet" href="menu.css" />
+        <script src='handlebars.min.js'></script>
+        <script src='waterfalllib.abi.js'></script>
+        <script src='ethers.js'></script>
+        <!--script src='web3.min.js'></script-->
+</head>
+<body> 
+    <style>
+        body {
+  margin: 0;
+  font-family: 'Helvetica', Courier, monospace;
+  background-color:rgba(255, 255, 255, 0.04);
+}
+h1, h2, h3, h4{
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+  background-color: rgba(200, 200, 200, 0.5);
+  padding: 15px;
+}
+
+        
+</style> 
+        <script type="text/x-handlebars-template"  class="handlebars-template" id="summary">
+            <p>I am purchasing <b>{{maxInvest}}</b> ABT pre-tokens, with the aim to buy ABT, yielding a minimum of <b>{{yieldTxt}}</b>, with a credit enhancement of <b>{{ceTxt}}</b>.
+            In case of oversubscription, I expect to be able to invest at least <b>{{minInvest}}</b>. The full invested amount will be refunded to me on <u>date</u>, if the <u>minimum funding criteria</u> remains unsatisfied or the transaction is oversubscribed and competing bids take precedence such that an allocation of <b>{{minInvest}}</b> to my account is not possible.
+            </p>
+            <button class="w3-btn w3-ripple w3-teal">Confirm</button>
+        </script>
+        <script type="text/x-handlebars-template"  class="handlebars-template" id="error">
+            <div class="w3-panel w3-display-container w3-pale-red w3-bar w3-animate-bottom w3-card-4" style="position: fixed;bottom: 0;">
+                <div class="w3-bar-item">
+                    <span onclick="this.parentElement.style.display='none'" class="w3-btn w3-ripple w3-large w3-display-topright">&times;</span>
+                    <h3>{{this.head}}</h3>
+                    <p>{{this.body}}</p>
+                </div>
+            </div>
+        </script>
+        <script type="text/x-handlebars-template"  class="handlebars-template" id="warning">
+            <div class="w3-panel w3-display-container w3-pale-yellow w3-bar w3-animate-bottom  w3-card-4" style="position: fixed;bottom: 0;">
+                <div class="w3-bar-item">
+                    <span onclick="this.parentElement.style.display='none'" class="w3-btn w3-ripple w3-large w3-display-topright">&times;</span>
+                    <h3>{{this.head}}</h3>
+                    <p>{{this.body}}</p>
+                </div>
+            </div>
+        </script>
+        <script type="text/x-handlebars-template"  class="handlebars-template" id="success">
+            <div class="w3-panel w3-display-container w3-pale-green w3-bar w3-animate-bottom  w3-card-4" style="position: fixed;bottom: 0;">
+                <div class="w3-bar-item">
+                    <span onclick="this.parentElement.style.display='none'" class="w3-btn w3-ripple w3-large w3-display-topright">&times;</span>
+                    <h3>{{this.head}}</h3>
+                    <p>{{this.body}}</p>
+                </div>
+            </div>
+        </script>
+        <script type="text/x-handlebars-template"  class="handlebars-template" id="tableRows">
+            <table class="w3-table w3-striped w3-hoverable" id="modelResultsTable" style="overflow: scroll">
+                    <tr style="text-align: center">
+                      <th></th>
+                      <th>Balance</th>
+                      <th colspan="2" style="text-align: center" >Collections</th>
+                      <th colspan="4" style="text-align: center">Note Balance</th>
+                      <th colspan="4" style="text-align: center">Note Payments</th>
+                    </tr>
+                    <tr>
+                            <th>Month</th>
+                            <th>Pool</th>
+                            <th>Interest</th>
+                            <th>Total</th>
+                            <th>A</th>
+                            <th>B</th>
+                            <th>C</th>
+                            <th>D</th>
+                            <th>A</th>
+                            <th>B</th>
+                            <th>C</th>
+                            <th>D</th>
+                    </tr>
+            {{#each this}}
+            <tr id="modelResult{{{month}}}">
+                    <td>{{month}}</td>
+                    <td>{{poolBalance}}</td>
+                    <td>{{interestCollection}}</td>
+                    <td>{{totalCollection}}</td>
+                    {{#each balances}}
+                        <td>{{this}}</td>
+                    {{/each}}
+                    {{#each totalPayment}}
+                        <td>{{this}}</td>
+                    {{/each}}
+            </tr>
+            {{/each}}
+        </table> 
+        </script>
+        
+        <div id="alertMessages"></div>
+        <script>
+            
+            function collectTemplates(){
+                var allTemplates = document.getElementsByClassName("handlebars-template");
+                var hbTemplates = {};
+                for(t of allTemplates){
+                    hbTemplates[t.id] = Handlebars.compile(t.innerHTML);
+                }
+                return hbTemplates;
+            }
+            var hbTemplates = collectTemplates();
+            
+            /**
+            *@param messageType: One of "error", "warning", "success" defines the color of the alert shown
+            *@param messageJSON: messageJSON.head, messageJSON.body defines the message contents
+            */
+            function displayAlertMessage(messageJSON, messageType){
+                document.getElementById("alertMessages").innerHTML = hbTemplates[messageType](messageJSON);
+            }
+                var hbTemplate = Handlebars.compile(document.getElementById("summary").innerHTML);
+                function lockin(){
+                    var yieldElement = document.getElementById("yield");
+                    var ceElement = document.getElementById("ce");
+                
+                    if (yieldElement.selectedIndex == -1 || ceElement.selectedIndex == -1)
+                        return null;
+                
+                    
+                var investorJSON = {
+                    maxInvest:document.getElementById("maxInvest").value,
+                    minInvest:document.getElementById("minInvest").value,
+                    yieldTxt:yieldElement.options[yieldElement.selectedIndex].text,
+                    ceTxt:ceElement.options[ceElement.selectedIndex].text,
+                    yield:yieldElement.selectedIndex,
+                    ce:ceElement.selectedIndex
+                }
+                var div = document.createElement("div");
+                // div.innerHTML = JSON.stringify(investorJSON);
+                // document.getElementById("confirmInputs").appendChild(div);
+                
+                var hbdata = hbTemplates["summary"](investorJSON);
+                div.innerHTML = hbdata;// JSON.stringify(investorJSON);
+                document.getElementById("confirmInputs").appendChild(div);
+                }  
+        </script>
+
+    <script>
+    </script>
+        <nav id="mainMenu"> 
+
+                <div id="menu">
+                    <input type="checkbox" id="help-btn" />
+                    <input type="checkbox" id="menu-btn" />
+                    
+                    <div id="main-icons">
+                        <label id="menu-icon" for="menu-btn"></label>  
+                        <label id="help-icon" for="help-btn"></label>
+                    </div>
+                    <a href="./DesignTest.html#Overview"><span class='menudesc'>Overview </span> <i class="fas fa-home"></i></a>
+                    <a href="./DesignTest.html#Blockchain"><span class='menudesc'>Blockchain </span> <i class="fab fa-ethereum"></i></a>
+                    <a href="./DesignTest.html#KYC"><span class='menudesc'>KYC Check </span> <i class="far fa-id-card" ></i></a>
+                    <a href="./DesignTest.html#Dates"><span class='menudesc'>Crowdsale Dates </span> <i class="far fa-calendar-alt"></i></a>
+                    <a href="./DesignTest.html#Invest"><span class='menudesc'>Invest </span> <i class="far fa-coins"></i></a>
+                    <a href="./DesignTest.html#Collect"><span class='menudesc'>Collect Interest </span> <i class="far fa-piggy-bank"></i></a>
+                    <a href="#"><span class='menudesc'>Payments Model </span> <i class="fas fa-calculator"></i></a>
+                </div>
+            </nav>
+<div class="w3-bar w3-card-4">
+<header><h3>Transaction Structure</h3></header>
+<table class="w3-table w3-striped w3-hoverable">
+    <tr><th>Class</th><th>Interest Rate (Bps)</th><th>Size</th></tr>
+    <tr>
+        <th>A</th>
+        <td><input class="w3-input w3-border" type="number" id="rateA" min="1" max="2000" value="30" oninput="updateAvgRate(this)"/></td>
+        <td><input class="w3-input w3-border" type="number" id="sizeA" min="1" max="99" value="60" oninput="updateJuniorSize(this)"/></td>
+    </tr>
+    <tr>
+        <th>B</th>
+        <td><input class="w3-input w3-border" type="number" id="rateB" min="1" max="2000" value="90" oninput="updateAvgRate(this)"/></td>
+        <td><input class="w3-input w3-border" type="number" id="sizeB" min="1" max="99" value="20" oninput="updateJuniorSize(this)"/></td>
+    </tr>
+    <tr>
+        <th>C</th>
+        <td><input class="w3-input w3-border" type="number" id="rateC" min="1" max="2000" value="150" oninput="updateAvgRate(this)"/></td>
+        <td><input class="w3-input w3-border" type="number" id="sizeC" min="1" max="99" value="15" oninput="updateJuniorSize(this)"/></td>
+    </tr>
+    <tr>
+        <th>D</th>
+        <td><input class="w3-input w3-border" type="number" id="rateD" min="1" max="2000" value="200" readonly="true"/></td>
+        <td><input class="w3-input w3-border" type="number" id="sizeD" min="1" max="99" value="5" readonly="true"/></td>
+    </tr>
+    <tr>
+        <th>Average/Total</th>
+        <td><input class="w3-input w3-border" type="text" id="avgRate" value="20" readonly="true"/></td>
+        <td><input class="w3-input w3-border" type="text" value="100%" readonly="true"/></td>
+    </tr>
+</table>
+</div>
+<div class="w3-bar w3-card-4">
+<header><h3>Modelling Assumptions</h3></header>
+<table class="w3-table w3-striped w3-hoverable">
+    <tr><th>Repayment Rate</th><th>Loss Rate</th><th>Yield</th></tr>
+    <tr>
+        <td><input class="w3-input w3-border" type="range" id="repaymentS" min="0.001" max="1" step="0.001" value="0.4" oninput="updateText(this)"/></td>
+        <td><input class="w3-input w3-border" type="range" id="lossS" min="0.001" max="1" step="0.001" value="0.005" oninput="updateText(this)"/></td>
+        <td><input class="w3-input w3-border" type="range" id="yieldS" min="0.001" max="0.3" step="0.001" value="0.1" oninput="updateText(this)"/></td>
+    </tr>
+    <tr>
+        <td><input class="w3-input" type="number" id="repaymentT" value="0.4" min="0.001" max="1" step="0.001" oninput="updateSlider(this)"/></td>
+        <td><input class="w3-input" type="number" id="lossT" value="0.005"  min="0.001" max="1" step="0.001" oninput="updateSlider(this)"/></td>
+        <td><input class="w3-input" type="number" id="yieldT" value="0.1"  min="0.001" max="0.3" step="0.001" oninput="updateSlider(this)"/></td>
+    </tr>
+</table>
+<script>
+function updateText(sliderElement){
+    sliderId = sliderElement.id;
+    textId = sliderId.slice(0,sliderId.length - 1) + "T";
+    var textElement = document.getElementById(textId);
+    if(sliderElement.value){
+        textElement.value = sliderElement.value;
+    }
+}
+function updateSlider(textElement){
+    textId = textElement.id;
+    sliderId = textId.slice(0,sliderId.length - 1) + "S";
+    var sliderElement = document.getElementById(sliderId);
+    if(textElement.value){
+     sliderElement.value = textElement.value;
+    }
+}
+function updateAvgRate(){
+    var classes = ["A","B","C","D"];
+    var WArate = 0;
+    for(var c of classes){
+        WArate += document.getElementById("rate"+c).value * document.getElementById("size"+c).value
+    }
+    document.getElementById("avgRate").value = WArate / 100;
+}
+function updateJuniorSize(){
+    var classes = ["A","B","C"];
+    var totalSize = 0;
+    for(var c of classes){
+        totalSize += parseFloat(document.getElementById("size"+c).value);
+    }   
+    document.getElementById("sizeD").value = 100 - totalSize;
+    updateAvgRate();
+}
+</script>
+<button class="w3-button w3-grey w3-bar" onclick="runModel()">Run Model</button>
+<!-- <button class="w3-button w3-grey w3-bar" onclick="runWaterfall()">Run Waterfall</button> -->
+<script>
+
+
+// function runWaterfall(){
+//     getWeb3()
+//     .then(function(){return getContract(web3, waterfallABI, waterfallAddress)})
+//     // .then(function(r){
+//     //     return r.calculateWaterfall({principal: 100, totalReceipts: 1000, 
+//     //         balance: [100000,1000,1000,1000], interestDue: [1000,100,100,0]},
+
+//     //         );}
+//     // )
+//     .then(console.log);
+        
+// }
+function getContract(web3, abi, address){
+    //var contractspec = new web3.eth.contract(abi);
+    return web3.version;
+}
+function runModel(){
+    var initialBalance = 1000000.0;
+    var poolData = preparePoolData(initialBalance);
+    console.log(poolData);
+    var noteBalances = [];
+    var noteRates = []
+    var classes = ["A","B","C","D"];
+    for(var c of classes){
+        var noteBalance = Math.round(document.getElementById("size"+c).value *  initialBalance / 100);
+        noteBalances.push(noteBalance);
+        noteRates.push(Math.round(document.getElementById("rate"+c).value * noteBalance / 10000)); 
+    }
+    var waterfall = calculateWaterfall(1, poolData,noteBalances,noteRates);
+    updateOutputTable(poolData);
+}
+function updateOutputTable(poolData){
+    var formattedOutput = hbTemplates["tableRows"](poolData)
+    var modelResults = document.getElementById("modelResults");
+    var oldTable = document.getElementById("modelResultsTable");
+    if(oldTable){
+        modelResults.removeChild(oldTable);
+    }
+    modelResults.innerHTML += formattedOutput;
+}
+
+var localProvider = new ethers.getDefaultProvider(networkName); //providers.JsonRpcProvider("http://localhost:8545");
+var contract = new ethers.Contract(waterfallAddress, waterfallABI,localProvider);
+var payment = [];
+function calculateWaterfall(month, poolData, startingBalances, interestRates){
+    var result = {newBalances: startingBalances, principalPayment: [0,0,0,0], totalPayment: [0,0,0,0] };
+    var principal  = poolData[month-1].poolBalance - poolData[month].poolBalance;
+    var collections = poolData[month].totalCollection;
+    // console.log("prin" + principal + "coll" + collections);
+    var interestDue
+    for(var r of interestRates){
+        
+    }
+    contract.calculateWaterfall(principal, collections, startingBalances, interestRates).then((result) => {
+                // console.log("result" + result);
+                poolData[month-1]["balances"] = startingBalances.map(i => i.toString());
+                poolData[month]["totalPayment"] = [];
+                for(var i = 0;i<startingBalances.length-1;i++){
+                    startingBalances[i] = ethers.utils.bigNumberify(startingBalances[i]).sub(result[1][i]);
+                    startingBalances[i] = startingBalances[i].lt(0)?0:startingBalances[i];
+                    poolData[month]["totalPayment"].push(result[0][i].toString());
+                }
+                startingBalances[startingBalances.length-1] = result[1][startingBalances.length-1];
+                poolData[month]["totalPayment"].push(result[0][startingBalances.length-1].toString());
+                // console.log("balances" + startingBalances);
+                if(month<poolData.length - 1 ){
+                    calculateWaterfall(month+1, poolData, startingBalances, interestRates);
+                }
+                else if(month == poolData.length - 1){
+                    updateOutputTable(poolData);
+                }
+                
+            });
+}
+
+function preparePoolData(initialBalance){
+    var assumptions = getModellingAssumptions();
+    var result = {month: 0, poolBalance : initialBalance, interestCollection: 0, totalCollection: 0};
+    var results = [result];
+    while(result.poolBalance > (initialBalance * 0.1)){
+
+        result = JSON.parse(JSON.stringify(result));
+        result.month += 1;
+        result.interestCollection = Math.round(result.poolBalance * (1.0 - assumptions.loss) * assumptions.yield);
+        result.totalCollection = Math.round(result.interestCollection + result.poolBalance * assumptions.repayment);
+        result.poolBalance = Math.round(result.poolBalance * (1.0 - assumptions.repayment - assumptions.loss));
+        results.push(result);
+        
+    }
+    return results;
+}
+function getModellingAssumptions(){
+    var assumptions = {repayment: 0.0, loss: 0.0, yield: 0.0 };
+    assumptions.repayment = Math.pow(1.0 + parseFloat(document.getElementById("repaymentT").value), (1.0/12.0)) - 1.0;
+    assumptions.loss = Math.pow(1.0 + parseFloat(document.getElementById("lossT").value),(1.0/12.0)) - 1.0;
+    assumptions.yield = Math.pow(1.0 + parseFloat(document.getElementById("yieldT").value), (1.0/12.0)) - 1.0;
+    return assumptions;
+}
+</script>
+</div>
+<div class="w3-bar w3-card-4" id="modelResults">
+<header><h3>Modelling Results</h3></header>
+
+</div>
+
+</body>
+</html>

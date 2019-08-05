@@ -36,7 +36,7 @@ contract Deal is Ownable{
         interestDue.push(0);
         currentPayment.push(0);
         numberOfNotes++;
-        emit NoteAdded(newNoteLevel, balance, interestRate, xn);
+        emit NoteAdded(newNoteLevel, balance, interestRate, n);
     }
 
     function getNotes() public view returns(Note[] memory){
