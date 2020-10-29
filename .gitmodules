@@ -1,0 +1,9 @@
+[submodule "smart_contract/lib/date_time"]
+	path = smart_contract/lib/date_time
+	url = https://github.com/MaxWdeMon/ethereum-datetime.git
+[submodule "smart_contract/lib/openzeppelin-solidity"]
+	path = smart_contract/lib/openzeppelin-solidity
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts.git
+[submodule "web-client/library/ethers"]
+	path = web-client/library/ethers
+	url = https://github.com/ethers-io/ethers.js.git
