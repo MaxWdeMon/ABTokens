@@ -7,6 +7,21 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "Mocha Tests",
+            "program": "/usr/local/lib/node_modules/mocha/bin/_mocha",
+            "args": [
+                "-u",
+                "tdd",
+                "--timeout",
+                "999999",
+                "--colors",
+                "${workspaceFolder}/test"
+            ],
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "Launch NodeJS server",
             "program": "${workspaceFolder}/web-client/nodejsrunner.js"
         },
@@ -17,6 +32,22 @@
             "url": "http://localhost:8081",
             "webRoot": "${workspaceFolder}/web-client/"
         },
-
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Ethers Tester",
+            "program": "${workspaceFolder}/web-client/ethersrunner.js"
+        },
+        {
+            "name": "Truffle Tests",
+            "type": "node",
+            "request": "launch",
+            "program": "/usr/local/lib/node_modules/truffle/build/cli.bundled.js",
+            "args": ["test"],
+            "cwd": "${workspaceRoot}/smart_contract",
+            "outFiles": [
+                "${workspaceRoot}/test/**/*"
+            ],
+        }
     ]
 }

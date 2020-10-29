@@ -1,10 +1,9 @@
 pragma solidity >=0.4.0 <0.6.0;
 
-import "../Deal.sol";
-import "../Note.sol";
+import "./Deal.sol";
+import "./Note.sol";
 
 contract DealProxy_tester is Deal{
-    
     function setupTestNotes(uint8 numberOfNotes) public{
         for(uint8 i = 0; i < numberOfNotes; i++){
              createTestNote(i); 

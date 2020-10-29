@@ -2,8 +2,8 @@ pragma solidity >=0.4.0 <0.6.0;
 
 /**
  * @author Maxwell's Deamon
- * @title Waterfall paying engine for securitisation on Ethereum 
- * 
+ * @title Waterfall paying engine for securitisation on Ethereum
+ *
  */
 
 library Waterfall {
@@ -15,7 +15,7 @@ library Waterfall {
     function caluculateMonthlyInterestDue(uint256 balance, uint256 monthlyRateBPS) public pure returns(uint256){
         return balance * monthlyRateBPS / 10000;
     }
-    
+
     /**
      * @notice calculates the interest payment for each obligation for a specified number of months
      * @param months - the number of months that have passed since the last payment
@@ -36,15 +36,15 @@ library Waterfall {
         }
     }
     function calculateInterest(int32 months,  uint256[] memory balance, uint256[] memory monthlyRateBPS) public pure returns(uint256[] memory){
-        require(balance.length == monthlyRateBPS.length);
+        require(balance.length == monthlyRateBPS.length, "Different number of tranches (balance) and  rates (monthlyRateBPS)");
         uint256[] memory interestDue = new uint256[](balance.length);
-        for(uint8 i = 0; i <  balance.length; i++){
+        for(uint8 i = 0; i < balance.length; i++){
             interestDue[i] = calculateInterest(months, balance[i], monthlyRateBPS[i]);
         }
         return interestDue;
     }
-    
-     function calculateWaterfall(uint256 principal, uint256 totalReceipts, uint256[] memory balance, uint256[] memory interestDue)
+
+    function calculateWaterfall(uint256 principal, uint256 totalReceipts, uint256[] memory balance, uint256[] memory interestDue)
      public pure returns (uint256[] memory, uint256[] memory){
         uint256[] memory principalPayment = new uint256[](balance.length);
         uint256[] memory totalPayment = new uint256[](balance.length);

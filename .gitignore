@@ -1,8 +1,8 @@
-solidity/tests/.DS_Store
-contracts/.DS_Store
-bckpTests/.DS_Store
+**/.DS_Store
 .DS_Store
-bckpTests/*
-build/*
-node_modules/*
+smart_contract/bckpTests/*
+smart_contract/build/*
+**/node_modules/*
 docs/uml.txt
+web-client/node_modules/*
+package-lock.json

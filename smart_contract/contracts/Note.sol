@@ -1,31 +1,31 @@
 pragma solidity ^0.5.0;
 
-import "../node_modules/openzeppelin-solidity/contracts/payment/PaymentSplitter.sol";
-import "../node_modules/openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
+import "../lib/openzeppelin-solidity/contracts/payment/PaymentSplitter.sol";
+import "../lib/openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
 /**
  * based on PaymentSplitter and ERC20
  */
 contract Note is  IERC20{
     using SafeMath for uint256;
-    
+
     event PayeeAdded(address account, uint256 shares);
     event PaymentReleased(address to, uint256 amount);
     event PaymentReceived(address from, uint256 amount);
     event TotalDistributionsChanged(uint256 amount);
-    
+
     uint256 private _totalSupply;
     uint256 private _totalReleased;
     uint256 public totalDistributions;
 
     mapping(address => uint256) private _balances;
     mapping(address => uint256) private _released;
-    
+
     address[] private _payees;
     mapping (address => mapping (address => uint256)) private _allowed;
 
 
-    
+
     /**
      * @dev standard function used to receive payments
      */
@@ -90,7 +90,7 @@ contract Note is  IERC20{
      * @param value The amount of tokens to be spent.
      */
     function approve(address spender, uint256 value) public returns (bool) {
-        require(spender != address(0));
+        require(spender != address(0), "spender must be a valid address");
 
         _allowed[msg.sender][spender] = value;
         emit Approval(msg.sender, spender, value);
@@ -123,7 +123,7 @@ contract Note is  IERC20{
      * @param addedValue The amount of tokens to increase the allowance by.
      */
     function increaseAllowance(address spender, uint256 addedValue) public returns (bool) {
-        require(spender != address(0));
+        require(spender != address(0), "spender must be a valid address");
 
         _allowed[msg.sender][spender] = _allowed[msg.sender][spender].add(addedValue);
         emit Approval(msg.sender, spender, _allowed[msg.sender][spender]);
@@ -141,7 +141,7 @@ contract Note is  IERC20{
      * @param subtractedValue The amount of tokens to decrease the allowance by.
      */
     function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) {
-        require(spender != address(0) );
+        require(spender != address(0), "spender must be a valid address");
 
         _allowed[msg.sender][spender] = _allowed[msg.sender][spender].sub(subtractedValue);
         emit Approval(msg.sender, spender, _allowed[msg.sender][spender]);
@@ -170,7 +170,7 @@ contract Note is  IERC20{
      * @param value The amount that will be created.
      */
     function _mint(address account, uint256 value) internal {
-        require(account != address(0));
+        require(account != address(0), "account must be a valid address");
 
         _totalSupply = _totalSupply.add(value);
         _balances[account] = _balances[account].add(value);
@@ -184,7 +184,7 @@ contract Note is  IERC20{
      * @param value The amount that will be burnt.
      */
     function _burn(address account, uint256 value) internal {
-        require(account != address(0));
+        require(account != address(0), "account must be a valid address");
 
         _totalSupply = _totalSupply.sub(value);
         _balances[account] = _balances[account].sub(value);
@@ -204,7 +204,7 @@ contract Note is  IERC20{
         _burn(account, value);
         emit Approval(account, msg.sender, _allowed[account][msg.sender]);
     }
-    
+
 //////////////
 
     /**
@@ -260,12 +260,12 @@ contract Note is  IERC20{
      * @param account Whose payments will be released.
      */
     function release(address payable account) public {
-        require(_balances[account] > 0);
+        require(_balances[account] > 0, "Tis account has no invested balance");
 
         uint256 totalReceived = address(this).balance.add(_totalReleased);
         uint256 payment = totalReceived.mul(_balances[account]).div(_totalSupply).sub(_released[account]);
 
-        require(payment != 0);
+        require(payment != 0, "Nothing to be paid");
 
         _released[account] = _released[account].add(payment);
         _totalReleased = _totalReleased.add(payment);
@@ -280,9 +280,9 @@ contract Note is  IERC20{
      * @param shares_ The number of shares owned by the payee.
      */
     function _addPayee(address account, uint256 shares_) public {
-        require(account != address(0));
-        require(shares_ > 0);
-        require(_balances[account] == 0);
+        require(account != address(0), "Invalid account provided");
+        require(shares_ > 0, "Number of shares must be positive");
+        require(_balances[account] == 0, "Account already has a positive balance and can't be added again");
 
         _payees.push(account);
         _balances[account] = shares_;

@@ -5,7 +5,6 @@ contract('Note', (accounts) => {
   it('should check that a new note has 0 total Supply initially.', async () => {
     const noteInstance = await Note.deployed();
     const balance = await noteInstance.totalSupply.call();
-
     assert.equal(balance.valueOf(), 0, "Total supply wasn't 0.");
   });
   /*

@@ -31,7 +31,7 @@ contract Deal_test {
   // //   Assert.equal(uint(2), uint(2), "error message");
   }
 
-  function testStartDateSetterFail() public returns (bool) {
+  function testStartDateSetterFail() public pure returns (bool) {
     // use the return value (true or false) to test the contract
     // d.setStartDate(now + 100 );
     return true;

@@ -1,0 +1,189 @@
+package Deal.sol {
+	class  Deal  {	
+		~address auditor
+		~bool isAudited
+		~uint256 startDate
+		~uint256 maturityDate
+		~uint256 lastChecked
+		~uint256 poolBalance
+		uint8 numberOfNotes
+		~Note[] notes
+		~uint256[] balances
+		~uint256[] interestRates
+		~uint256[] interestDue
+		~uint256[] currentPayment
+		~DealStage dealStage    	
+		+addNote(uint8,uint256,uint256,Note)
+		+getNotes()=>(Note[])
+		+setStartDate(uint256)
+		-updateInterestDue(int32,uint256)
+		+updateInterestsDue(uint256)
+		+updateInterestsDue()
+		+checkPaymentUpdater()
+		{static}#{static}fallback()
+		{static}+payWaterfall(uint256,uint256,uint256)
+		+getBalances()=>(uint256[])
+		+setAuditor(address)
+		+confirmAuditCompleted()
+		+crowdSaleCompleted()=>(bool)
+		+nextDealStage()
+		{static}+cleanup()
+		+getStartDate()=>(uint256)
+		+getLastChecked()=>(uint256)
+		+getInterestDue()=>(uint256[])
+	}
+}
+package Note.sol {
+	class  Note  {	
+		-uint256 _totalSupply
+		-uint256 _totalReleased
+		+uint256 totalDistributions
+		-address->uint256 _balances
+		-address->uint256 _released
+		-address[] _payees
+		-address->address->uint256 _allowed    	
+		{static}#pay()
+		{static}#{static}fallback()
+		+totalSupply()=>(uint256)
+		+balanceOf(address)=>(uint256)
+		+allowance(address,address)=>(uint256)
+		+transfer(address,uint256)=>(bool)
+		+approve(address,uint256)=>(bool)
+		+transferFrom(address,address,uint256)=>(bool)
+		+increaseAllowance(address,uint256)=>(bool)
+		+decreaseAllowance(address,uint256)=>(bool)
+		~_transfer(address,address,uint256)
+		~_mint(address,uint256)
+		~_burn(address,uint256)
+		~_burnFrom(address,uint256)
+		+totalShares()=>(uint256)
+		+totalReleased()=>(uint256)
+		+shares(address)=>(uint256)
+		+released(address)=>(uint256)
+		+payee(uint256)=>(address)
+		+release(address)
+		+_addPayee(address,uint256)
+	}
+}
+package PaymentSplitter.sol {
+	class  PaymentSplitter  {	
+		-uint256 _totalShares
+		-uint256 _totalReleased
+		-address->uint256 _shares
+		-address->uint256 _released
+		-address[] _payees    	
+		{static}+{static}fallback(address[],uint256[])
+		{static}#{static}fallback()
+		+totalShares()=>(uint256)
+		+totalReleased()=>(uint256)
+		+shares(address)=>(uint256)
+		+released(address)=>(uint256)
+		+payee(uint256)=>(address)
+		+release(address)
+		-_addPayee(address,uint256)
+	}
+}
+package Context.sol {
+	class  Context  {	    	
+		~{static}fallback()
+		~_msgSender()=>(address)
+		~_msgData()=>(bytes)
+	}
+}
+package SafeMath.sol {
+	class  SafeMath  <<(L,lightblue) Lib>> {	    	
+		~add(uint256,uint256)=>(uint256)
+		~sub(uint256,uint256)=>(uint256)
+		~sub(uint256,uint256,string)=>(uint256)
+		~mul(uint256,uint256)=>(uint256)
+		~div(uint256,uint256)=>(uint256)
+		~div(uint256,uint256,string)=>(uint256)
+		~mod(uint256,uint256)=>(uint256)
+		~mod(uint256,uint256,string)=>(uint256)
+	}
+}
+package IERC20.sol {
+	abstract  IERC20  {	    	
+		{abstract}#totalSupply()=>(uint256)
+		{abstract}#balanceOf(address)=>(uint256)
+		{abstract}#transfer(address,uint256)=>(bool)
+		{abstract}#allowance(address,address)=>(uint256)
+		{abstract}#approve(address,uint256)=>(bool)
+		{abstract}#transferFrom(address,address,uint256)=>(bool)
+	}
+}
+package DateCalc.sol {
+	class  DateCalc  <<(L,lightblue) Lib>> {	    	
+		+normaliseTimestamp(uint256,uint8)=>(uint256)
+		+monthsSince(uint256,uint256)=>(int32,uint256)
+	}
+}
+package DateTime.sol {
+	class  _DateTime  <<(S, lightyellow) struct>> {	
+		uint16 year
+		uint8 month
+		uint8 day
+		uint8 hour
+		uint8 minute
+		uint8 second
+		uint8 weekday    	
+	}
+}
+package DateTime.sol {
+	class  DateTime  <<(L,lightblue) Lib>> {	
+		uint DAY_IN_SECONDS
+		uint YEAR_IN_SECONDS
+		uint LEAP_YEAR_IN_SECONDS
+		uint HOUR_IN_SECONDS
+		uint MINUTE_IN_SECONDS
+		uint16 ORIGIN_YEAR    	
+		+isLeapYear(uint16)=>(bool)
+		+leapYearsBefore(uint)=>(uint)
+		+getDaysInMonth(uint8,uint16)=>(uint8)
+		~parseTimestamp(uint)=>(_DateTime)
+		+getYear(uint)=>(uint16)
+		+getMonth(uint)=>(uint8)
+		+getDay(uint)=>(uint8)
+		+getHour(uint)=>(uint8)
+		+getMinute(uint)=>(uint8)
+		+getSecond(uint)=>(uint8)
+		+getWeekday(uint)=>(uint8)
+		+toTimestamp(uint16,uint8,uint8)=>(uint)
+		+toTimestamp(uint16,uint8,uint8,uint8)=>(uint)
+		+toTimestamp(uint16,uint8,uint8,uint8,uint8)=>(uint)
+		+toTimestamp(uint16,uint8,uint8,uint8,uint8,uint8)=>(uint)
+	}
+}
+package Waterfall.sol {
+	class  Waterfall  <<(L,lightblue) Lib>> {	    	
+		+caluculateMonthlyInterestDue(uint256,uint256)=>(uint256)
+		+calculateInterest(int32,uint256,uint256)=>(uint256)
+		+calculateInterest(int32,uint256[],uint256[])=>(uint256[])
+		+calculateWaterfall(uint256,uint256,uint256[],uint256[])=>(uint256[],uint256[])
+	}
+}
+package Ownable.sol {
+	class  Ownable  {	
+		-address _owner    	
+		~{static}fallback()
+		+owner()=>(address)
+		+isOwner()=>(bool)
+		+renounceOwnership()
+		+transferOwnership(address)
+		~_transferOwnership(address)
+	}
+}
+Ownable <|-- Deal
+IERC20 <|-- Note
+Context <|-- PaymentSplitter
+Context <|-- Ownable
+DateCalc "using" ..+ "for e.g.DateCalc" Deal
+Waterfall "using" ..+ "for e.g.Waterfall" Deal
+Note  --o Deal
+DealStage  --o Deal
+SafeMath "using" ..+ "for e.g.uint256" Note
+SafeMath "using" ..+ "for e.g.uint256" PaymentSplitter
+DateTime "using" ..+ "for e.g.DateTime" DateCalc
+DateTime  *-- _DateTime
+_DateTime  --o DateTime
+

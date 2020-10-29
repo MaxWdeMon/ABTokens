@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <!-- <meta http-equiv="X-UA-Compatible" content="IE=edge"> -->
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- <link rel="stylesheet" href=""> -->
+        <script src="./ethers.js"></script>
+    </head>
+    <body>
+        <!--[if lt IE 7]>
+            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+        <script>
+            async function setupTransaction(){
+                var formTx = document.getElementById("transaction");
+                var newTx = {};
+                for(var inp of formTx.children){
+                    newTx[inp.name] = inp.value;
+                }
+                newTx.chainId = parseInt(newTx.chainId);
+                newTx.gasPrice = ethers.utils.bigNumberify(newTx.gasPrice);
+                newTx.value = ethers.utils.parseEther(newTx.value);
+                console.log(newTx);
+                var signedT = document.getElementById("signedTransaction");
+                var wallet = new ethers.Wallet(document.getElementById("privateKey").value);
+                console.log(wallet);
+                wallet.sign(newTx).then(function(signedCode){
+                    signedT.value = signedCode;
+                    console.log(signedCode);
+                });
+                return newTx;
+            }
+            async function sendTransaction(tx){
+                
+            }
+            
+        </script>
+            
+        <form id="transaction">
+            <input type="text" name="nonce" id="nonce" onchange="manualnonce()" value="0x0"/>
+            <input type="text" name="gasLimit" id="gasLimit"  value="0x21000"/>
+            <input type="number" name="gasPrice" id="gasPrice"  value="2000000000"/>
+            <input type="text" name="to" id="toAddress" value="0x88a5C2d9919e46F883EB62F7b8Dd9d0CC45bc290"/>
+            <input type="number" name="value" id="txValue" value="12345678"/>
+            <input type="number" name="chainId" id="chainID" value="1337"/>
+            <!-- nonce: 0,
+                gasLimit: 21000,
+                gasPrice: ethers.utils.bigNumberify("20000000000"),
+                to: "0x88a5C2d9919e46F883EB62F7b8Dd9d0CC45bc290",
+                // ... or supports ENS names
+                // to: "ricmoo.firefly.eth",
+                value: ethers.utils.parseEther("1.0"),
+                data: "0x",
+                // This ensures the transaction cannot be replayed on different networks
+                chainId: 1337 // ethers.utils.getNetwork('homestead').chainId -->
+            </form>
+            <input type="text" name="privateKey" id="privateKey" value="0x3141592653589793238462643383279502884197169399375105820974944592"/>
+            <input type="button" name="button" value="Setup Transaction" onclick="setupTransaction()"/>
+            
+            <textarea id="signedTransaction" rows="15" cols="50"></textarea>
+            <input type="button" name="button" value="Send Transaction" onclick="sendTransaction()"/>
+        <script src="" async defer></script>
+    </body>
+</html>

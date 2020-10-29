@@ -1,5 +1,5 @@
 pragma solidity >=0.5.0 <0.6.0;
-import "../node_modules/ethereum-datetime/contracts/DateTime.sol";
+import "../lib/date_time/contracts/DateTime.sol";
 //import "./DateTime.sol";
 //import "https://github.com/pipermerriam/ethereum-datetime/contracts/DateTime.sol";
 

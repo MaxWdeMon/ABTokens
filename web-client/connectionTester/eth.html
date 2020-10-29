@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+    <!-- <meta http-equiv="X-UA-Compatible" content="ie=edge"> -->
+    <title>Document</title>
+    <script src="../lib/ethers/dist/ethers.min.js"></script>
+    <script src="eth.js"></script>
+    <script src="qr/jquery.min.js"></script>
+    <script src="qr/qrcode.min.js"></script>
+</head>
+<body>
+        <div id="qrcode" style="width:100px; height:100px; margin-top:15px;"></div>
+        <script type="text/javascript">
+            var qrcode = new QRCode(document.getElementById("qrcode"), {
+                width : 500,
+                height : 500
+            });
+
+            qrcode.makeCode("1");
+            var os = new offlineSigner(ourPK);
+            os.signingPromise(os.sampleTransaction).then(signed=>{qrcode.makeCode(signed);});
+
+        
+
+    </script>
+</body>
+</html>
